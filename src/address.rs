@@ -40,8 +40,6 @@ use {
 /// let address_str = "0x1...";
 /// let aptos_address = AptosAddress::from_str(address_str);
 /// assert!(aptos_address.is_ok());
-/// ```
-
 /// Represents a Solana address
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AptosAddress(pub AccountAddress);

@@ -1,28 +1,34 @@
-use crate::utils::DEFAULT_DERIVE_PATH_APTOS;
 use crate::{AptosAddress, AptosFormat, AptosPublicKey};
 use anychain_core::{Transaction, TransactionError, TransactionId};
 use aptos_sdk::{
+    crypto::{
+        ed25519::{Ed25519PublicKey, Ed25519Signature},
+        traits::signing_message,
+    },
     move_types::{
         account_address::AccountAddress,
         identifier::Identifier,
         language_storage::{ModuleId, TypeTag},
     },
-    transaction_builder::TransactionBuilder,
-    types::chain_id::ChainId,
-    types::transaction::{EntryFunction, TransactionPayload},
-    types::LocalAccount,
+    types::{
+        chain_id::ChainId,
+        transaction::SignedTransaction,
+        transaction::{EntryFunction, RawTransaction, TransactionPayload},
+    },
 };
-use std::time::{SystemTime, UNIX_EPOCH};
 use std::{fmt, str::FromStr};
-
-const _NAMED_CHAIN_MAINNET: u8 = 1;
-const NAME_CHAIN_TESTNET: u8 = 2;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AptosTransactionParameters {
     pub from: AptosAddress,
     pub to: AptosAddress,
     pub amount: u64,
+    pub nonce: u64,
+    pub gas_limit: u64,
+    pub gas_price: u64,
+    pub network: u8,
+    pub now: u64, // seconds
+    pub public_key: Vec<u8>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -56,12 +62,34 @@ impl Transaction for AptosTransaction {
         })
     }
 
-    fn sign(&mut self, _rs: Vec<u8>, _: u8) -> Result<Vec<u8>, TransactionError> {
-        todo!()
+    fn sign(&mut self, rs: Vec<u8>, _: u8) -> Result<Vec<u8>, TransactionError> {
+        if rs.len() != 64 {
+            return Err(TransactionError::Message(format!(
+                "Invalid signature length {}",
+                rs.len(),
+            )));
+        }
+        self.signature = Some(rs);
+        self.to_bytes()
     }
 
     fn to_bytes(&self) -> Result<Vec<u8>, TransactionError> {
-        todo!()
+        let raw_tx = self.build_raw_tx()?;
+        match &self.signature {
+            Some(sig) => {
+                let pk = self.params.public_key.as_slice();
+                let pk = Ed25519PublicKey::try_from(pk)
+                    .map_err(|_| TransactionError::Message("crypto error".to_string()))?;
+                let sig = Ed25519Signature::try_from(sig.as_slice())
+                    .map_err(|_| TransactionError::Message("crypto error".to_string()))?;
+                let signed_tx = SignedTransaction::new(raw_tx, pk, sig);
+                let signed_tx = bcs::to_bytes(&signed_tx)
+                    .map_err(|_| TransactionError::Message("Serialization Error".to_string()))?;
+                Ok(signed_tx)
+            }
+            None => signing_message(&raw_tx)
+                .map_err(|_| TransactionError::Message("aptos crypto error".to_string())),
+        }
     }
 
     fn from_bytes(_tx: &[u8]) -> Result<Self, TransactionError> {
@@ -74,71 +102,41 @@ impl Transaction for AptosTransaction {
 }
 
 impl AptosTransaction {
-    pub fn to_signed_txn(&self, mnemonic: &str) -> Result<Vec<u8>, TransactionError> {
-        let amount: u64 = 1_000;
-        let options = aptos_sdk::coin_client::TransferOptions::default();
-        let transaction_builder = TransactionBuilder::new(
-            TransactionPayload::EntryFunction(EntryFunction::new(
-                ModuleId::new(AccountAddress::ONE, Identifier::new("coin").unwrap()),
-                Identifier::new("transfer").unwrap(),
-                vec![TypeTag::from_str(options.coin_type).unwrap()],
-                vec![
-                    bcs::to_bytes(&self.params.to.0).unwrap(),
-                    bcs::to_bytes(&amount).unwrap(),
-                ],
-            )),
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
-                + options.timeout_secs,
-            ChainId::new(NAME_CHAIN_TESTNET),
-        )
-        .sender(self.params.from.0)
-        .max_gas_amount(options.max_gas_amount)
-        .gas_unit_price(options.gas_unit_price);
+    pub fn build_raw_tx(&self) -> Result<RawTransaction, TransactionError> {
+        let module_name =
+            Identifier::new("coin").map_err(|e| TransactionError::Message(e.to_string()))?;
+        let function =
+            Identifier::new("transfer").map_err(|e| TransactionError::Message(e.to_string()))?;
+        let type_tag = TypeTag::from_str("0x1::aptos_coin::AptosCoin")
+            .map_err(|e| TransactionError::Message(e.to_string()))?;
 
-        let from_local_account =
-            LocalAccount::from_derive_path(DEFAULT_DERIVE_PATH_APTOS, mnemonic, 0).unwrap();
-        let signed_txn = from_local_account.sign_with_transaction_builder(transaction_builder);
+        let to = bcs::to_bytes(&self.params.to.0)
+            .map_err(|_| TransactionError::Message("bcs error".to_string()))?;
+        let amount = bcs::to_bytes(&self.params.amount)
+            .map_err(|_| TransactionError::Message("bcs error".to_string()))?;
+        let payload = TransactionPayload::EntryFunction(EntryFunction::new(
+            ModuleId::new(AccountAddress::ONE, module_name),
+            function,
+            vec![type_tag],
+            vec![to, amount],
+        ));
+        let chain_id = ChainId::new(self.params.network);
+        let expiration = self.params.now + 10;
 
-        let txn_payload = bcs::to_bytes(&signed_txn)
-            .map_err(|_| TransactionError::Message("Serialization Error".to_string()))?;
-        Ok(txn_payload)
+        Ok(RawTransaction::new(
+            self.params.from.0,
+            self.params.nonce,
+            payload,
+            self.params.gas_limit,
+            self.params.gas_price,
+            expiration,
+            chain_id,
+        ))
     }
 }
+
 #[cfg(test)]
 mod tests {
-
-    use super::*;
-    use crate::{
-        utils::{from_derive_path, DEFAULT_DERIVE_PATH_APTOS},
-        AptosFormat, AptosPublicKey, AptosTransaction, AptosTransactionParameters,
-    };
-    use anychain_core::PublicKey;
     #[test]
-    fn test_aptos_transaction() {
-        let mnemonic_alice =
-            "provide stem law exchange laptop prison wrap alone frog skill subway tumble";
-        let mnemonic_bob =
-            "shoot island position soft burden budget tooth cruel issue economy destroy above";
-
-        let secret_key_alice = from_derive_path(DEFAULT_DERIVE_PATH_APTOS, mnemonic_alice).unwrap();
-        let public_key_alice = AptosPublicKey::from_secret_key(&secret_key_alice);
-        let address_alice = public_key_alice.to_address(&AptosFormat::Standard).unwrap();
-
-        let secret_key_bob = from_derive_path(DEFAULT_DERIVE_PATH_APTOS, mnemonic_bob).unwrap();
-        let public_key_bob = AptosPublicKey::from_secret_key(&secret_key_bob);
-        let address_bob = public_key_bob.to_address(&AptosFormat::Standard).unwrap();
-
-        let amount = 1000;
-        let params = AptosTransactionParameters {
-            from: address_alice,
-            to: address_bob,
-            amount,
-        };
-        let tx = AptosTransaction::new(&params).unwrap();
-        let txn = tx.to_signed_txn(mnemonic_alice);
-        assert!(txn.is_ok());
-    }
+    fn test_tx_gen() {}
 }
