@@ -137,6 +137,34 @@ impl AptosTransaction {
 
 #[cfg(test)]
 mod tests {
+    use anychain_core::Address;
+    use rand::{rngs::OsRng, TryRngCore};
+    use crate::{AptosAddress, AptosFormat, AptosTransaction, AptosTransactionParameters};
+
     #[test]
-    fn test_tx_gen() {}
+    fn test_tx_gen() {
+        let sk_from = [215u8, 129, 55, 157, 41, 22, 63, 25, 208, 37, 28, 225, 115, 237, 181, 127, 45, 91, 21, 61, 35, 74, 12, 13, 7, 157, 236, 54, 1, 30, 95, 139];
+        let sk_from = ed25519_dalek::SecretKey::from_bytes(sk_from.as_slice()).unwrap();
+        let from = AptosAddress::from_secret_key(&sk_from, &AptosFormat::Standard).unwrap();
+
+        let sk_to = [75u8, 175, 15, 72, 84, 215, 15, 161, 201, 20, 205, 106, 226, 255, 251, 29, 13, 48, 213, 30, 74, 50, 4, 137, 1, 208, 193, 201, 80, 21, 36, 244];
+        let sk_to = ed25519_dalek::SecretKey::from_bytes(sk_to.as_slice()).unwrap();
+        let to = AptosAddress::from_secret_key(&sk_to, &AptosFormat::Standard).unwrap();
+
+        println!("from: {}\nto: {}", from, to);
+        // from = 0xae5c0eb553f446267cafa1df9f635e8bc3bcc35611efb27754061f2255ee0784
+        // to = 0xfd34ef79e24c375d135d3f0a289dffe3d2be17756db621f031d9c0e1efa7355f
+
+        // AptosTransactionParameters {
+        //     from,
+        //     to,
+        //     amount: 10000000,
+        //     nonce: 0,
+        //     gas_limit: 
+        // }
+
+
+
+
+    }
 }
