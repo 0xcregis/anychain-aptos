@@ -6,9 +6,7 @@ use aptos_sdk::{
         traits::signing_message,
     },
     move_types::{
-        account_address::AccountAddress,
-        identifier::Identifier,
-        language_storage::ModuleId,
+        account_address::AccountAddress, identifier::Identifier, language_storage::ModuleId,
     },
     types::{
         chain_id::ChainId,
@@ -16,8 +14,8 @@ use aptos_sdk::{
         transaction::{EntryFunction, RawTransaction, TransactionPayload},
     },
 };
+use serde::{Deserialize, Serialize};
 use std::fmt;
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Object {
@@ -26,8 +24,7 @@ pub struct Object {
 
 impl Object {
     pub fn serialize(&self) -> Result<Vec<u8>, TransactionError> {
-        bcs::to_bytes(self)
-            .map_err(|e| TransactionError::Message(e.to_string()))
+        bcs::to_bytes(self).map_err(|e| TransactionError::Message(e.to_string()))
     }
 }
 
@@ -47,10 +44,9 @@ impl Output {
             amounts.push(output.amount);
         }
 
-        let tos = bcs::to_bytes(&tos)
-            .map_err(|e| TransactionError::Message(e.to_string()))?;
-        let amounts = bcs::to_bytes(&amounts)
-            .map_err(|e| TransactionError::Message(e.to_string()))?;
+        let tos = bcs::to_bytes(&tos).map_err(|e| TransactionError::Message(e.to_string()))?;
+        let amounts =
+            bcs::to_bytes(&amounts).map_err(|e| TransactionError::Message(e.to_string()))?;
 
         Ok((tos, amounts))
     }
@@ -150,10 +146,8 @@ impl AptosTransaction {
             Some(token) => {
                 let function = Identifier::new("batch_transfer_fungible_assets")
                     .map_err(|e| TransactionError::Message(e.to_string()))?;
-                
-                let token = Object {
-                    inner: token.0,
-                };
+
+                let token = Object { inner: token.0 };
 
                 let token = token.serialize()?;
 
@@ -194,22 +188,31 @@ impl AptosTransaction {
 
 #[cfg(test)]
 mod tests {
-    use std::{str::FromStr, time::{SystemTime, UNIX_EPOCH}};
+    use std::{
+        str::FromStr,
+        time::{SystemTime, UNIX_EPOCH},
+    };
 
-    use anychain_core::{Address, Transaction};
     use crate::{AptosAddress, AptosFormat, AptosTransaction, AptosTransactionParameters, Output};
-    use ed25519_dalek::{SecretKey, PublicKey, ExpandedSecretKey};
+    use anychain_core::{Address, Transaction};
+    use ed25519_dalek::{ExpandedSecretKey, PublicKey, SecretKey};
 
     #[test]
     fn test_tx_gen() {
-        let sk_from = [215u8, 129, 55, 157, 41, 22, 63, 25, 208, 37, 28, 225, 115, 237, 181, 127, 45, 91, 21, 61, 35, 74, 12, 13, 7, 157, 236, 54, 1, 30, 95, 139];
+        let sk_from = [
+            215u8, 129, 55, 157, 41, 22, 63, 25, 208, 37, 28, 225, 115, 237, 181, 127, 45, 91, 21,
+            61, 35, 74, 12, 13, 7, 157, 236, 54, 1, 30, 95, 139,
+        ];
         let sk_from = SecretKey::from_bytes(sk_from.as_slice()).unwrap();
         let from = AptosAddress::from_secret_key(&sk_from, &AptosFormat::Standard).unwrap();
 
         let pk = PublicKey::from(&sk_from);
         let pk_bytes = pk.as_bytes().to_vec();
 
-        let sk_to = [75u8, 175, 15, 72, 84, 215, 15, 161, 201, 20, 205, 106, 226, 255, 251, 29, 13, 48, 213, 30, 74, 50, 4, 137, 1, 208, 193, 201, 80, 21, 36, 244];
+        let sk_to = [
+            75u8, 175, 15, 72, 84, 215, 15, 161, 201, 20, 205, 106, 226, 255, 251, 29, 13, 48, 213,
+            30, 74, 50, 4, 137, 1, 208, 193, 201, 80, 21, 36, 244,
+        ];
         let sk_to = SecretKey::from_bytes(sk_to.as_slice()).unwrap();
         let to = AptosAddress::from_secret_key(&sk_to, &AptosFormat::Standard).unwrap();
 
@@ -222,12 +225,18 @@ mod tests {
             .unwrap()
             .as_secs();
 
-        let token = AptosAddress::from_str("0x69091fbab5f7d635ee7ac5098cf0c1efbe31d68fec0f2cd565e8d168daf52832").unwrap();
+        let token = AptosAddress::from_str(
+            "0x69091fbab5f7d635ee7ac5098cf0c1efbe31d68fec0f2cd565e8d168daf52832",
+        )
+        .unwrap();
 
         let tx = AptosTransactionParameters {
             token: None,
             from,
-            outputs: vec![Output { to, amount: 10000000 }],
+            outputs: vec![Output {
+                to,
+                amount: 10000000,
+            }],
             nonce: 4,
             gas_limit: 5000,
             gas_price: 200,
@@ -241,7 +250,7 @@ mod tests {
         let msg = tx.to_bytes().unwrap();
 
         let xsk = ExpandedSecretKey::from(&sk_from);
-        
+
         let sig = xsk.sign(&msg, &pk);
         let sig = sig.to_bytes().to_vec();
 
