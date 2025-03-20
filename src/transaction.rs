@@ -25,6 +25,10 @@ impl Object {
     pub fn serialize(&self) -> Result<Vec<u8>, TransactionError> {
         bcs::to_bytes(self).map_err(|e| TransactionError::Message(e.to_string()))
     }
+
+    pub fn deserialize(stream: &[u8]) -> Result<Self, TransactionError> {
+        bcs::from_bytes::<Self>(stream).map_err(|e| TransactionError::Message(e.to_string()))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -48,6 +52,34 @@ impl Output {
             bcs::to_bytes(&amounts).map_err(|e| TransactionError::Message(e.to_string()))?;
 
         Ok((tos, amounts))
+    }
+
+    pub fn deserialize(streams: &[Vec<u8>]) -> Result<Vec<Self>, TransactionError> {
+        let mut outputs = vec![];
+
+        let tos = &streams[0];
+        let amounts = &streams[1];
+
+        let tos = bcs::from_bytes::<Vec<AccountAddress>>(tos)
+            .map_err(|e| TransactionError::Message(e.to_string()))?;
+        let amounts = bcs::from_bytes::<Vec<u64>>(amounts)
+            .map_err(|e| TransactionError::Message(e.to_string()))?;
+
+        let len = tos.len();
+
+        if len != amounts.len() {
+            return Err(TransactionError::Message(
+                "account and balance number mismatch".to_string(),
+            ));
+        }
+
+        for i in 0..len {
+            let to = AptosAddress(tos[i]);
+            let amount = amounts[i];
+            outputs.push(Output { to, amount });
+        }
+
+        Ok(outputs)
     }
 }
 
@@ -176,8 +208,62 @@ impl Transaction for AptosTransaction {
         }
     }
 
-    fn from_bytes(_tx: &[u8]) -> Result<Self, TransactionError> {
-        todo!()
+    fn from_bytes(stream: &[u8]) -> Result<Self, TransactionError> {
+        let tx = bcs::from_bytes::<SignedTransaction>(stream)
+            .map_err(|e| TransactionError::Message(e.to_string()))?;
+
+        let from = AptosAddress(tx.sender());
+        let nonce = tx.sequence_number();
+        let network = tx.chain_id().id();
+        let gas_limit = tx.max_gas_amount();
+        let gas_price = tx.gas_unit_price();
+
+        if let TransactionPayload::EntryFunction(entry) = tx.payload() {
+            let args = entry.args().to_vec();
+            match args.len() {
+                // we are handling an APT transfer
+                2 => {
+                    let outputs = Output::deserialize(&args)?;
+
+                    Ok(AptosTransaction::new(&AptosTransactionParameters {
+                        token: None,
+                        from,
+                        outputs,
+                        nonce,
+                        gas_limit,
+                        gas_price,
+                        network,
+                        now: 0,
+                        public_key: vec![],
+                    })?)
+                }
+                // we are handling a token transfer
+                3 => {
+                    let token = Object::deserialize(&args[0])?;
+                    let token = Some(AptosAddress(token.inner));
+                    let outputs = Output::deserialize(&args[1..])?;
+
+                    Ok(AptosTransaction::new(&AptosTransactionParameters {
+                        token,
+                        from,
+                        outputs,
+                        nonce,
+                        gas_limit,
+                        gas_price,
+                        network,
+                        now: 0,
+                        public_key: vec![],
+                    })?)
+                }
+                _ => Err(TransactionError::Message(
+                    "illegal arg number for move call".to_string(),
+                )),
+            }
+        } else {
+            Err(TransactionError::Message(
+                "deserialization error".to_string(),
+            ))
+        }
     }
 
     fn to_transaction_id(&self) -> Result<Self::TransactionId, TransactionError> {
@@ -224,13 +310,13 @@ mod tests {
             .unwrap()
             .as_secs();
 
-        let _token = AptosAddress::from_str(
+        let token = AptosAddress::from_str(
             "0x69091fbab5f7d635ee7ac5098cf0c1efbe31d68fec0f2cd565e8d168daf52832",
         )
         .unwrap();
 
         let tx = AptosTransactionParameters {
-            token: None,
+            token: Some(token),
             from,
             outputs: vec![Output {
                 to,
@@ -256,5 +342,9 @@ mod tests {
         let tx = tx.sign(sig, 0).unwrap();
 
         println!("{:?}", tx);
+
+        let tx = AptosTransaction::from_bytes(&tx).unwrap();
+
+        println!("tx: {:?}", tx);
     }
 }
