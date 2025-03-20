@@ -96,20 +96,14 @@ pub struct AptosTransactionParameters {
     pub public_key: Vec<u8>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AptosTransaction {
-    pub params: AptosTransactionParameters,
-    pub signature: Option<Vec<u8>>,
-}
-
-impl AptosTransaction {
+impl AptosTransactionParameters {
     pub fn build_raw_tx(&self) -> Result<RawTransaction, TransactionError> {
         let module = Identifier::new("aptos_account")
             .map_err(|e| TransactionError::Message(e.to_string()))?;
         let module = ModuleId::new(AccountAddress::ONE, module);
-        let (tos, amounts) = Output::serialize(&self.params.outputs)?;
+        let (tos, amounts) = Output::serialize(&self.outputs)?;
 
-        let payload = match &self.params.token {
+        let payload = match &self.token {
             Some(token) => {
                 let function = Identifier::new("batch_transfer_fungible_assets")
                     .map_err(|e| TransactionError::Message(e.to_string()))?;
@@ -138,19 +132,25 @@ impl AptosTransaction {
             }
         };
 
-        let chain_id = ChainId::new(self.params.network);
-        let expiration = self.params.now + 60;
+        let chain_id = ChainId::new(self.network);
+        let expiration = self.now + 60;
 
         Ok(RawTransaction::new(
-            self.params.from.0,
-            self.params.nonce,
+            self.from.0,
+            self.nonce,
             payload,
-            self.params.gas_limit,
-            self.params.gas_price,
+            self.gas_limit,
+            self.gas_price,
             expiration,
             chain_id,
         ))
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AptosTransaction {
+    pub params: AptosTransactionParameters,
+    pub signature: Option<Vec<u8>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -190,7 +190,7 @@ impl Transaction for AptosTransaction {
     }
 
     fn to_bytes(&self) -> Result<Vec<u8>, TransactionError> {
-        let raw_tx = self.build_raw_tx()?;
+        let raw_tx = self.params.build_raw_tx()?;
         match &self.signature {
             Some(sig) => {
                 let pk = self.params.public_key.as_slice();
