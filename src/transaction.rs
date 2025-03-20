@@ -8,7 +8,7 @@ use aptos_sdk::{
     move_types::{
         account_address::AccountAddress,
         identifier::Identifier,
-        language_storage::{ModuleId, TypeTag},
+        language_storage::ModuleId,
     },
     types::{
         chain_id::ChainId,
@@ -16,13 +16,51 @@ use aptos_sdk::{
         transaction::{EntryFunction, RawTransaction, TransactionPayload},
     },
 };
-use std::{fmt, str::FromStr};
+use std::fmt;
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Object {
+    pub inner: AccountAddress,
+}
+
+impl Object {
+    pub fn serialize(&self) -> Result<Vec<u8>, TransactionError> {
+        bcs::to_bytes(self)
+            .map_err(|e| TransactionError::Message(e.to_string()))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Output {
+    pub to: AptosAddress,
+    pub amount: u64,
+}
+
+impl Output {
+    pub fn serialize(outputs: &Vec<Self>) -> Result<(Vec<u8>, Vec<u8>), TransactionError> {
+        let mut tos = vec![];
+        let mut amounts = vec![];
+
+        for output in outputs {
+            tos.push(output.to.0);
+            amounts.push(output.amount);
+        }
+
+        let tos = bcs::to_bytes(&tos)
+            .map_err(|e| TransactionError::Message(e.to_string()))?;
+        let amounts = bcs::to_bytes(&amounts)
+            .map_err(|e| TransactionError::Message(e.to_string()))?;
+
+        Ok((tos, amounts))
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AptosTransactionParameters {
+    pub token: Option<AptosAddress>,
     pub from: AptosAddress,
-    pub to: AptosAddress,
-    pub amount: u64,
+    pub outputs: Vec<Output>,
     pub nonce: u64,
     pub gas_limit: u64,
     pub gas_price: u64,
@@ -103,32 +141,42 @@ impl Transaction for AptosTransaction {
 
 impl AptosTransaction {
     pub fn build_raw_tx(&self) -> Result<RawTransaction, TransactionError> {
-        let module_name =
-            Identifier::new("aptos_account").map_err(|e| TransactionError::Message(e.to_string()))?;
-        
-        // call "batch_transfer" for APT batch transfer
-        // call "batch_transfer<CoinType>" for token batch transfer
-        let function =
-            Identifier::new("transfer").map_err(|e| TransactionError::Message(e.to_string()))?;
-        
-        // USDT = "0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDT"
-        // USDC = "0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDC"
-        let type_tag = TypeTag::from_str("0x1::aptos_coin::AptosCoin")
+        let module = Identifier::new("aptos_account")
             .map_err(|e| TransactionError::Message(e.to_string()))?;
+        let module = ModuleId::new(AccountAddress::ONE, module);
+        let (tos, amounts) = Output::serialize(&self.params.outputs)?;
 
-        // use bcs::to_bytes(&vec![account1, account2, ...]) to serialize multiple recipients
-        // use bcs::to_bytes(&vec![amount1, amount2, ...]) to serialize multiple amounts
-        let to = bcs::to_bytes(&self.params.to.0)
-            .map_err(|_| TransactionError::Message("bcs error".to_string()))?;
-        let amount = bcs::to_bytes(&self.params.amount)
-            .map_err(|_| TransactionError::Message("bcs error".to_string()))?;
-        
-        let payload = TransactionPayload::EntryFunction(EntryFunction::new(
-            ModuleId::new(AccountAddress::ONE, module_name),
-            function,
-            vec![],
-            vec![to, amount],
-        ));
+        let payload = match &self.params.token {
+            Some(token) => {
+                let function = Identifier::new("batch_transfer_fungible_assets")
+                    .map_err(|e| TransactionError::Message(e.to_string()))?;
+                
+                let token = Object {
+                    inner: token.0,
+                };
+
+                let token = token.serialize()?;
+
+                TransactionPayload::EntryFunction(EntryFunction::new(
+                    module,
+                    function,
+                    vec![],
+                    vec![token, tos, amounts],
+                ))
+            }
+            None => {
+                let function = Identifier::new("batch_transfer")
+                    .map_err(|e| TransactionError::Message(e.to_string()))?;
+
+                TransactionPayload::EntryFunction(EntryFunction::new(
+                    module,
+                    function,
+                    vec![],
+                    vec![tos, amounts],
+                ))
+            }
+        };
+
         let chain_id = ChainId::new(self.params.network);
         let expiration = self.params.now + 60;
 
@@ -146,24 +194,23 @@ impl AptosTransaction {
 
 #[cfg(test)]
 mod tests {
-    use std::time::{SystemTime, UNIX_EPOCH};
+    use std::{str::FromStr, time::{SystemTime, UNIX_EPOCH}};
 
     use anychain_core::{Address, Transaction};
-    use rand::{rngs::OsRng, TryRngCore};
-    use crate::{AptosAddress, AptosFormat, AptosTransaction, AptosTransactionParameters};
-    use ed25519_dalek::{SecretKey, ExpandedSecretKey, Signature};
+    use crate::{AptosAddress, AptosFormat, AptosTransaction, AptosTransactionParameters, Output};
+    use ed25519_dalek::{SecretKey, PublicKey, ExpandedSecretKey};
 
     #[test]
     fn test_tx_gen() {
         let sk_from = [215u8, 129, 55, 157, 41, 22, 63, 25, 208, 37, 28, 225, 115, 237, 181, 127, 45, 91, 21, 61, 35, 74, 12, 13, 7, 157, 236, 54, 1, 30, 95, 139];
-        let sk_from = ed25519_dalek::SecretKey::from_bytes(sk_from.as_slice()).unwrap();
+        let sk_from = SecretKey::from_bytes(sk_from.as_slice()).unwrap();
         let from = AptosAddress::from_secret_key(&sk_from, &AptosFormat::Standard).unwrap();
 
-        let pk = ed25519_dalek::PublicKey::from(&sk_from);
+        let pk = PublicKey::from(&sk_from);
         let pk_bytes = pk.as_bytes().to_vec();
 
         let sk_to = [75u8, 175, 15, 72, 84, 215, 15, 161, 201, 20, 205, 106, 226, 255, 251, 29, 13, 48, 213, 30, 74, 50, 4, 137, 1, 208, 193, 201, 80, 21, 36, 244];
-        let sk_to = ed25519_dalek::SecretKey::from_bytes(sk_to.as_slice()).unwrap();
+        let sk_to = SecretKey::from_bytes(sk_to.as_slice()).unwrap();
         let to = AptosAddress::from_secret_key(&sk_to, &AptosFormat::Standard).unwrap();
 
         println!("from: {}\nto: {}", from, to);
@@ -175,11 +222,13 @@ mod tests {
             .unwrap()
             .as_secs();
 
+        let token = AptosAddress::from_str("0x69091fbab5f7d635ee7ac5098cf0c1efbe31d68fec0f2cd565e8d168daf52832").unwrap();
+
         let tx = AptosTransactionParameters {
+            token: None,
             from,
-            to,
-            amount: 10000000,
-            nonce: 2,
+            outputs: vec![Output { to, amount: 10000000 }],
+            nonce: 4,
             gas_limit: 5000,
             gas_price: 200,
             network: 2,
