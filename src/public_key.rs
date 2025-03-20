@@ -18,7 +18,6 @@ use {
 ///
 /// Basic usage:
 ///
-/// ```
 /// use anychain_aptos::AptosPublicKey;
 /// use std::str::FromStr;
 ///
@@ -29,7 +28,6 @@ use {
 /// // Convert the `AptosPublicKey` to an `AptosAddress`.
 /// let address = aptos_pubkey.to_address(&AptosFormat::Standard).expect("Failed to convert to address");
 /// println!("Address: {}", address);
-/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AptosPublicKey(pub(crate) ed25519_dalek::PublicKey);
 

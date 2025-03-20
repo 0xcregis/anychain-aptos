@@ -19,7 +19,6 @@ use {
 ///
 /// Creating an `AptosAddress` from a public key:
 ///
-/// ```
 /// use anychain_aptos::{AptosAddress, AptosPublicKey, AptosFormat};
 /// use anychain_core::Address;
 /// use std::str::FromStr;
@@ -28,11 +27,9 @@ use {
 /// let pubkey = AptosPublicKey::from_str(public_key_str).unwrap();
 /// let aptos_address = AptosAddress::from_public_key(&pubkey, &AptosFormat::Standard);
 /// assert!(aptos_address.is_ok());
-/// ```
 ///
 /// Creating an `AptosAddress` from a string representation:
 ///
-/// ```
 /// use anychain_aptos::AptosAddress;
 /// use anychain_core::Address;
 /// use core::str::FromStr;

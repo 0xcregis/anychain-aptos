@@ -10,8 +10,7 @@ use aptos_sdk::{
     },
     types::{
         chain_id::ChainId,
-        transaction::SignedTransaction,
-        transaction::{EntryFunction, RawTransaction, TransactionPayload},
+        transaction::{EntryFunction, RawTransaction, SignedTransaction, TransactionPayload},
     },
 };
 use serde::{Deserialize, Serialize};
@@ -225,7 +224,7 @@ mod tests {
             .unwrap()
             .as_secs();
 
-        let token = AptosAddress::from_str(
+        let _token = AptosAddress::from_str(
             "0x69091fbab5f7d635ee7ac5098cf0c1efbe31d68fec0f2cd565e8d168daf52832",
         )
         .unwrap();
