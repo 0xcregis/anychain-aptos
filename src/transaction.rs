@@ -71,6 +71,57 @@ pub struct AptosTransaction {
     pub signature: Option<Vec<u8>>,
 }
 
+impl AptosTransaction {
+    pub fn build_raw_tx(&self) -> Result<RawTransaction, TransactionError> {
+        let module = Identifier::new("aptos_account")
+            .map_err(|e| TransactionError::Message(e.to_string()))?;
+        let module = ModuleId::new(AccountAddress::ONE, module);
+        let (tos, amounts) = Output::serialize(&self.params.outputs)?;
+
+        let payload = match &self.params.token {
+            Some(token) => {
+                let function = Identifier::new("batch_transfer_fungible_assets")
+                    .map_err(|e| TransactionError::Message(e.to_string()))?;
+
+                let token = Object { inner: token.0 };
+
+                let token = token.serialize()?;
+
+                TransactionPayload::EntryFunction(EntryFunction::new(
+                    module,
+                    function,
+                    vec![],
+                    vec![token, tos, amounts],
+                ))
+            }
+            None => {
+                let function = Identifier::new("batch_transfer")
+                    .map_err(|e| TransactionError::Message(e.to_string()))?;
+
+                TransactionPayload::EntryFunction(EntryFunction::new(
+                    module,
+                    function,
+                    vec![],
+                    vec![tos, amounts],
+                ))
+            }
+        };
+
+        let chain_id = ChainId::new(self.params.network);
+        let expiration = self.params.now + 60;
+
+        Ok(RawTransaction::new(
+            self.params.from.0,
+            self.params.nonce,
+            payload,
+            self.params.gas_limit,
+            self.params.gas_price,
+            expiration,
+            chain_id,
+        ))
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AptosTransactionId {}
 
@@ -132,57 +183,6 @@ impl Transaction for AptosTransaction {
 
     fn to_transaction_id(&self) -> Result<Self::TransactionId, TransactionError> {
         todo!()
-    }
-}
-
-impl AptosTransaction {
-    pub fn build_raw_tx(&self) -> Result<RawTransaction, TransactionError> {
-        let module = Identifier::new("aptos_account")
-            .map_err(|e| TransactionError::Message(e.to_string()))?;
-        let module = ModuleId::new(AccountAddress::ONE, module);
-        let (tos, amounts) = Output::serialize(&self.params.outputs)?;
-
-        let payload = match &self.params.token {
-            Some(token) => {
-                let function = Identifier::new("batch_transfer_fungible_assets")
-                    .map_err(|e| TransactionError::Message(e.to_string()))?;
-
-                let token = Object { inner: token.0 };
-
-                let token = token.serialize()?;
-
-                TransactionPayload::EntryFunction(EntryFunction::new(
-                    module,
-                    function,
-                    vec![],
-                    vec![token, tos, amounts],
-                ))
-            }
-            None => {
-                let function = Identifier::new("batch_transfer")
-                    .map_err(|e| TransactionError::Message(e.to_string()))?;
-
-                TransactionPayload::EntryFunction(EntryFunction::new(
-                    module,
-                    function,
-                    vec![],
-                    vec![tos, amounts],
-                ))
-            }
-        };
-
-        let chain_id = ChainId::new(self.params.network);
-        let expiration = self.params.now + 60;
-
-        Ok(RawTransaction::new(
-            self.params.from.0,
-            self.params.nonce,
-            payload,
-            self.params.gas_limit,
-            self.params.gas_price,
-            expiration,
-            chain_id,
-        ))
     }
 }
 
