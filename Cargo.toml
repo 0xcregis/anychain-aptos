@@ -15,7 +15,7 @@ path = "examples/transfer-coins.rs"
 
 [dependencies]
 anychain-core = { version = "0.1.6" }
-aptos-sdk = { git = "https://github.com/aptos-labs/aptos-core", branch = "devnet" }
+aptos-sdk = { git = "https://github.com/aptos-labs/aptos-core", branch = "devnet-de9040dab6d41af91520fa90e43200949d9490f7" }
 ed25519-dalek = { version = "1.0.1", features = ["std", "serde"] }
 ed25519-dalek-bip32 = "0.2.0"
 tiny-bip39 = "0.8.2"
