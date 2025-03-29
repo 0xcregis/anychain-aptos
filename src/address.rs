@@ -6,43 +6,14 @@ use {
         fmt::{Display, Formatter, Result as FmtResult},
         str::FromStr,
     },
+    curve25519_dalek::Scalar,
 };
 
-/// Represents an Aptos blockchain address.
-///
-/// This struct encapsulates an `AccountAddress` from the Aptos SDK, providing additional
-/// functionality for working with Aptos addresses within the context of the `anychain-aptos` library.
-/// It implements the `Address` trait, enabling interoperability with different blockchain
-/// address formats and key types.
-///
-/// # Examples
-///
-/// Creating an `AptosAddress` from a public key:
-///
-/// use anychain_aptos::{AptosAddress, AptosPublicKey, AptosFormat};
-/// use anychain_core::Address;
-/// use std::str::FromStr;
-///
-/// let public_key_str = "your_public_key_here";
-/// let pubkey = AptosPublicKey::from_str(public_key_str).unwrap();
-/// let aptos_address = AptosAddress::from_public_key(&pubkey, &AptosFormat::Standard);
-/// assert!(aptos_address.is_ok());
-///
-/// Creating an `AptosAddress` from a string representation:
-///
-/// use anychain_aptos::AptosAddress;
-/// use anychain_core::Address;
-/// use core::str::FromStr;
-///
-/// let address_str = "0x1...";
-/// let aptos_address = AptosAddress::from_str(address_str);
-/// assert!(aptos_address.is_ok());
-/// Represents a Solana address
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct AptosAddress(pub AccountAddress);
+pub struct AptosAddress(pub(crate) AccountAddress);
 
 impl Address for AptosAddress {
-    type SecretKey = ed25519_dalek::SecretKey;
+    type SecretKey = Scalar;
     type Format = AptosFormat;
     type PublicKey = AptosPublicKey;
 
@@ -58,10 +29,6 @@ impl Address for AptosAddress {
         _: &Self::Format,
     ) -> Result<Self, AddressError> {
         public_key.to_address(&AptosFormat::Standard)
-    }
-
-    fn is_valid(address: &str) -> bool {
-        Self::from_str(address).is_ok()
     }
 }
 
@@ -84,8 +51,8 @@ impl Display for AptosAddress {
 #[cfg(test)]
 mod tests {
     use super::AptosAddress;
-    use crate::public_key::AptosPublicKey;
     use crate::AptosFormat;
+    use crate::public_key::AptosPublicKey;
     use anychain_core::Address;
     use core::str::FromStr;
 

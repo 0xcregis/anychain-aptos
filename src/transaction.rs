@@ -278,7 +278,10 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
-    use crate::{AptosAddress, AptosFormat, AptosTransaction, AptosTransactionParameters, Output};
+    use crate::{
+        AptosAddress, AptosFormat, AptosPublicKey, AptosTransaction, AptosTransactionParameters,
+        Output,
+    };
     use anychain_core::{Address, Transaction};
     use ed25519_dalek::{ExpandedSecretKey, PublicKey, SecretKey};
 
@@ -289,17 +292,19 @@ mod tests {
             61, 35, 74, 12, 13, 7, 157, 236, 54, 1, 30, 95, 139,
         ];
         let sk_from = SecretKey::from_bytes(sk_from.as_slice()).unwrap();
-        let from = AptosAddress::from_secret_key(&sk_from, &AptosFormat::Standard).unwrap();
-
-        let pk = PublicKey::from(&sk_from);
-        let pk_bytes = pk.as_bytes().to_vec();
+        let pk_from = PublicKey::from(&sk_from);
+        let pk = pk_from.as_bytes().to_vec();
+        let pk_from = AptosPublicKey(pk_from);
+        let from = AptosAddress::from_public_key(&pk_from, &AptosFormat::Standard).unwrap();
 
         let sk_to = [
             75u8, 175, 15, 72, 84, 215, 15, 161, 201, 20, 205, 106, 226, 255, 251, 29, 13, 48, 213,
             30, 74, 50, 4, 137, 1, 208, 193, 201, 80, 21, 36, 244,
         ];
         let sk_to = SecretKey::from_bytes(sk_to.as_slice()).unwrap();
-        let to = AptosAddress::from_secret_key(&sk_to, &AptosFormat::Standard).unwrap();
+        let pk_to = PublicKey::from(&sk_to);
+        let pk_to = AptosPublicKey(pk_to);
+        let to = AptosAddress::from_public_key(&pk_to, &AptosFormat::Standard).unwrap();
 
         println!("from: {}\nto: {}", from, to);
         // from = 0xae5c0eb553f446267cafa1df9f635e8bc3bcc35611efb27754061f2255ee0784
@@ -327,7 +332,7 @@ mod tests {
             gas_price: 200,
             network: 2,
             now,
-            public_key: pk_bytes,
+            public_key: pk,
         };
 
         let mut tx = AptosTransaction::new(&tx).unwrap();
@@ -336,7 +341,7 @@ mod tests {
 
         let xsk = ExpandedSecretKey::from(&sk_from);
 
-        let sig = xsk.sign(&msg, &pk);
+        let sig = xsk.sign(&msg, &pk_from.0);
         let sig = sig.to_bytes().to_vec();
 
         let tx = tx.sign(sig, 0).unwrap();
