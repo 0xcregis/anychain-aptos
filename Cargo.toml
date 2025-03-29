@@ -4,20 +4,17 @@ description = "A Rust library for Aptos-focused cryptocurrency wallets, enabling
 version = "0.1.1"
 keywords = ["aptos", "blockchain", "cryptocurrency", "wallet", "transactions"]
 authors = ["Shawndslee", "cregis.com"]
-edition = "2021"
+edition = "2024"
 homepage = "https://www.cregis.com"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/0xcregis/anychain"
 
-[[example]]
-name = "transfer-coin"
-path = "examples/transfer-coins.rs"
-
 [dependencies]
 anychain-core = { version = "0.1.6" }
-aptos-sdk = { git = "https://github.com/aptos-labs/aptos-core", branch = "devnet" }
+aptos-sdk = { git = "https://github.com/0xcregis/aptos-core", branch = "devnet" }
 ed25519-dalek = { version = "1.0.1", features = ["std", "serde"] }
-ed25519-dalek-bip32 = "0.2.0"
+curve25519-dalek = { version = "4.1.3", features = ["group"] }
+group = "0.13.0"
 tiny-bip39 = "0.8.2"
 anyhow = "1.0"
 bcs = { git = "https://github.com/aptos-labs/bcs.git", rev = "d31fab9d81748e2594be5cd5cdf845786a30562d" }
