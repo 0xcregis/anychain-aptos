@@ -10,7 +10,7 @@ use {
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AptosPublicKey(pub(crate) ed25519_dalek::PublicKey);
+pub struct AptosPublicKey(pub ed25519_dalek::PublicKey);
 
 pub const MAX_HEX_LEN: usize = 64;
 

@@ -108,9 +108,7 @@ impl AptosTransactionParameters {
                 let function = Identifier::new("batch_transfer_fungible_assets")
                     .map_err(|e| TransactionError::Message(e.to_string()))?;
 
-                let token = Object { inner: token.0 };
-
-                let token = token.serialize()?;
+                let token = Object { inner: token.0 }.serialize()?;
 
                 TransactionPayload::EntryFunction(EntryFunction::new(
                     module,
