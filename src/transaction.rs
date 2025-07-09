@@ -304,7 +304,7 @@ mod tests {
         let pk_to = AptosPublicKey(pk_to);
         let to = AptosAddress::from_public_key(&pk_to, &AptosFormat::Standard).unwrap();
 
-        println!("from: {}\nto: {}", from, to);
+        println!("from: {from}\nto: {to}");
         // from = 0xae5c0eb553f446267cafa1df9f635e8bc3bcc35611efb27754061f2255ee0784
         // to = 0xfd34ef79e24c375d135d3f0a289dffe3d2be17756db621f031d9c0e1efa7355f
 
@@ -344,10 +344,10 @@ mod tests {
 
         let tx = tx.sign(sig, 0).unwrap();
 
-        println!("{:?}", tx);
+        println!("{tx:?}");
 
         let tx = AptosTransaction::from_bytes(&tx).unwrap();
 
-        println!("tx: {:?}", tx);
+        println!("tx: {tx:?}");
     }
 }

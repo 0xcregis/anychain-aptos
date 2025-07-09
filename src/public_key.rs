@@ -44,7 +44,7 @@ impl FromStr for AptosPublicKey {
         }
         let bin = hex::decode(s)?;
         let verifying_key = ed25519_dalek::PublicKey::from_bytes(bin.as_slice())
-            .map_err(|error| PublicKeyError::Crate("hex", format!("{:?}", error)))?;
+            .map_err(|error| PublicKeyError::Crate("hex", format!("{error:?}")))?;
         Ok(AptosPublicKey(verifying_key))
     }
 }
