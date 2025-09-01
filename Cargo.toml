@@ -11,7 +11,9 @@ repository = "https://github.com/0xcregis/anychain"
 
 [dependencies]
 anychain-core = { version = "0.1.8" }
-aptos-sdk = { git = "https://github.com/0xcregis/aptos-core", branch = "devnet" }
+# branch = "devnet", rev = "f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+# https://github.com/0xcregis/aptos-core/commit/f994d7ba78e5e37412ede6d36a6eabeb74c62174
+aptos-sdk = { git = "https://github.com/0xcregis/aptos-core", rev = "f994d7ba78e5e37412ede6d36a6eabeb74c62174" }
 ed25519-dalek = { version = "1.0.1", features = ["std", "serde"] }
 curve25519-dalek = { version = "4.1.3", features = ["group"] }
 group = "0.13.0"
@@ -22,7 +24,7 @@ rand = "0.9.0"
 serde = "1.0.219"
 
 [patch.crates-io]
-merlin = { git = "https://github.com/aptos-labs/merlin" }
+merlin = { git = "https://github.com/aptos-labs/merlin", rev = "3454ccc85e37355c729ba40e6dac6e867ddf59f5" }
 x25519-dalek = { git = "https://github.com/aptos-labs/x25519-dalek", branch = "zeroize_v1" }
 
 [dev-dependencies]

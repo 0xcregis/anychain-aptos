@@ -174,7 +174,7 @@ checksum = "e16d2d3311acee920a9eb8d33b8cbc1787ce4a264e85f964c2404b969bdcd487"
 [[package]]
 name = "aptos-bitvec"
 version = "0.1.0"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "serde",
  "serde_bytes",
@@ -183,7 +183,7 @@ dependencies = [
 [[package]]
 name = "aptos-crypto"
 version = "0.0.3"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -234,7 +234,7 @@ dependencies = [
 [[package]]
 name = "aptos-crypto-derive"
 version = "0.0.3"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -244,7 +244,7 @@ dependencies = [
 [[package]]
 name = "aptos-dkg"
 version = "0.1.0"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "anyhow",
  "aptos-crypto",
@@ -276,17 +276,17 @@ dependencies = [
 [[package]]
 name = "aptos-global-constants"
 version = "0.1.0"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 
 [[package]]
 name = "aptos-infallible"
 version = "0.1.0"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 
 [[package]]
 name = "aptos-runtimes"
 version = "0.1.0"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "rayon",
  "tokio",
@@ -295,7 +295,7 @@ dependencies = [
 [[package]]
 name = "aptos-sdk"
 version = "0.0.3"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "anyhow",
  "aptos-crypto",
@@ -318,7 +318,7 @@ dependencies = [
 [[package]]
 name = "aptos-types"
 version = "0.0.3"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "anyhow",
  "aptos-bitvec",
@@ -2457,7 +2457,7 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 [[package]]
 name = "merlin"
 version = "3.0.0"
-source = "git+https://github.com/aptos-labs/merlin#3454ccc85e37355c729ba40e6dac6e867ddf59f5"
+source = "git+https://github.com/aptos-labs/merlin?rev=3454ccc85e37355c729ba40e6dac6e867ddf59f5#3454ccc85e37355c729ba40e6dac6e867ddf59f5"
 dependencies = [
  "byteorder",
  "keccak",
@@ -2510,7 +2510,7 @@ checksum = "1fafa6961cabd9c63bcd77a45d7e3b7f3b552b70417831fb0f56db717e72407e"
 [[package]]
 name = "move-binary-format"
 version = "0.0.3"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "anyhow",
  "backtrace",
@@ -2525,12 +2525,12 @@ dependencies = [
 [[package]]
 name = "move-borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 
 [[package]]
 name = "move-bytecode-spec"
 version = "0.1.0"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "once_cell",
  "quote",
@@ -2540,7 +2540,7 @@ dependencies = [
 [[package]]
 name = "move-bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "fail",
  "move-binary-format",
@@ -2554,7 +2554,7 @@ dependencies = [
 [[package]]
 name = "move-core-types"
 version = "0.0.4"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "anyhow",
  "bcs",
@@ -2576,7 +2576,7 @@ dependencies = [
 [[package]]
 name = "move-table-extension"
 version = "0.1.0"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "better_any",
  "bytes",
@@ -2591,7 +2591,7 @@ dependencies = [
 [[package]]
 name = "move-vm-metrics"
 version = "0.1.0"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "once_cell",
  "prometheus",
@@ -2600,7 +2600,7 @@ dependencies = [
 [[package]]
 name = "move-vm-runtime"
 version = "0.1.0"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "ambassador",
  "better_any",
@@ -2625,7 +2625,7 @@ dependencies = [
 [[package]]
 name = "move-vm-types"
 version = "0.1.0"
-source = "git+https://github.com/0xcregis/aptos-core?branch=devnet#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
+source = "git+https://github.com/0xcregis/aptos-core?rev=f994d7ba78e5e37412ede6d36a6eabeb74c62174#f994d7ba78e5e37412ede6d36a6eabeb74c62174"
 dependencies = [
  "ambassador",
  "bcs",
