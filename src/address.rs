@@ -64,7 +64,9 @@ mod tests {
         // Define a public key string.
         let pubkey_str = "ea526ba1710343d953461ff68641f1b7df5f23b9042ffa2d2a798d3adb3f3d6c";
         // Convert the string to an `AptosPublicKey` instance
-        let pubkey = AptosPublicKey::from_str(pubkey_str).unwrap();
+        let pubkey_res = AptosPublicKey::from_str(pubkey_str);
+        assert!(pubkey_res.is_ok());
+        let pubkey = pubkey_res.unwrap();
         // Attempt to create an `AptosAddress` from the `AptosPublicKey` using the standard format.
         let address = AptosAddress::from_public_key(&pubkey, &AptosFormat::Standard);
 

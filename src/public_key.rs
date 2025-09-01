@@ -54,3 +54,16 @@ impl fmt::Display for AptosPublicKey {
         write!(f, "{}", self.to_address(&AptosFormat::Standard).unwrap())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::AptosPublicKey;
+    use std::str::FromStr;
+    #[test]
+    fn test_invalid_public_key_cwe248() {
+        // Typically, callers should avoid using unwrap() here;
+        // instead, they should assert that the Result is not Err, then unwrap
+        let res = AptosPublicKey::from_str("deadbeef");
+        assert!(res.is_err());
+    }
+}
