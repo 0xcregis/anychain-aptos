@@ -13,6 +13,7 @@ use aptos_sdk::{
         transaction::{EntryFunction, RawTransaction, SignedTransaction, TransactionPayload},
     },
 };
+use core::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -183,6 +184,11 @@ impl Transaction for AptosTransaction {
                 rs.len(),
             )));
         }
+
+        let signature_result = Ed25519Signature::try_from(rs.as_slice());
+        if signature_result.is_err() {
+            return Err(TransactionError::Message("Invalid signature".to_string()));
+        }
         self.signature = Some(rs);
         self.to_bytes()
     }
@@ -342,12 +348,27 @@ mod tests {
         let sig = xsk.sign(&msg, &pk_from.0);
         let sig = sig.to_bytes().to_vec();
 
+        {
+            let fake_sig: Vec<u8> = [
+                9, 13, 152, 114, 226, 191, 19, 231, 14, 222, 192, 71, 85, 43, 69, 58, 254, 240,
+                207, 172, 178, 202, 55, 51, 112, 197, 37, 227, 220, 114, 75, 5, 150, 121, 179, 114,
+                249, 5, 153, 1, 232, 253, 248, 171, 75, 127, 44, 203, 157, 110, 248, 36, 160, 101,
+                165, 186, 156, 208, 108, 111, 130, 82, 26, 41,
+            ]
+            .into();
+            // let mut fake_sig: Vec<u8> = [0u8; 64].into();
+            // dbg!(fake_sig.clone());
+            // rand::thread_rng().fill(&mut fake_sig[..]);
+            // dbg!(fake_sig.clone());
+
+            let fake_tx = tx.sign(fake_sig, 0);
+            assert!(fake_tx.is_err());
+        }
+
         let tx = tx.sign(sig, 0).unwrap();
+        dbg!("{tx:?}");
 
-        println!("{tx:?}");
-
-        let tx = AptosTransaction::from_bytes(&tx).unwrap();
-
-        println!("tx: {tx:?}");
+        let _tx = AptosTransaction::from_bytes(&tx).unwrap();
+        dbg!("tx: {tx:?}");
     }
 }
