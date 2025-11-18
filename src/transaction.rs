@@ -287,7 +287,11 @@ mod tests {
         Output,
     };
     use anychain_core::{Address, Transaction};
-    use ed25519_dalek::{ExpandedSecretKey, PublicKey, SecretKey};
+    use ed25519_dalek::{
+        Signature, SigningKey, VerifyingKey,
+        hazmat::{self, ExpandedSecretKey},
+    };
+    use sha2::Sha512;
 
     #[test]
     fn test_tx_gen() {
@@ -295,8 +299,9 @@ mod tests {
             215u8, 129, 55, 157, 41, 22, 63, 25, 208, 37, 28, 225, 115, 237, 181, 127, 45, 91, 21,
             61, 35, 74, 12, 13, 7, 157, 236, 54, 1, 30, 95, 139,
         ];
-        let sk_from = SecretKey::from_bytes(sk_from.as_slice()).unwrap();
-        let pk_from = PublicKey::from(&sk_from);
+        // let sk_from = SecretKey::try_from(sk_from.as_slice()).unwrap();
+        let sk_from: SigningKey = SigningKey::from_bytes(&sk_from);
+        let pk_from = sk_from.verifying_key();
         let pk = pk_from.as_bytes().to_vec();
         let pk_from = AptosPublicKey(pk_from);
         let from = AptosAddress::from_public_key(&pk_from, &AptosFormat::Standard).unwrap();
@@ -305,8 +310,9 @@ mod tests {
             75u8, 175, 15, 72, 84, 215, 15, 161, 201, 20, 205, 106, 226, 255, 251, 29, 13, 48, 213,
             30, 74, 50, 4, 137, 1, 208, 193, 201, 80, 21, 36, 244,
         ];
-        let sk_to = SecretKey::from_bytes(sk_to.as_slice()).unwrap();
-        let pk_to = PublicKey::from(&sk_to);
+        // let sk_to = SecretKey::from_bytes(sk_to.as_slice()).unwrap();
+        let sk_to: SigningKey = SigningKey::from_bytes(&sk_to);
+        let pk_to = sk_to.verifying_key();
         let pk_to = AptosPublicKey(pk_to);
         let to = AptosAddress::from_public_key(&pk_to, &AptosFormat::Standard).unwrap();
 
@@ -314,10 +320,11 @@ mod tests {
         // from = 0xae5c0eb553f446267cafa1df9f635e8bc3bcc35611efb27754061f2255ee0784
         // to = 0xfd34ef79e24c375d135d3f0a289dffe3d2be17756db621f031d9c0e1efa7355f
 
-        let now = SystemTime::now()
+        let _now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
+        let now: u64 = 1763479230;
 
         let token = AptosAddress::from_str(
             "0x69091fbab5f7d635ee7ac5098cf0c1efbe31d68fec0f2cd565e8d168daf52832",
@@ -343,10 +350,17 @@ mod tests {
 
         let msg = tx.to_bytes().unwrap();
 
-        let xsk = ExpandedSecretKey::from(&sk_from);
-
-        let sig = xsk.sign(&msg, &pk_from.0);
-        let sig = sig.to_bytes().to_vec();
+        let sk_from_clone = [
+            215u8, 129, 55, 157, 41, 22, 63, 25, 208, 37, 28, 225, 115, 237, 181, 127, 45, 91, 21,
+            61, 35, 74, 12, 13, 7, 157, 236, 54, 1, 30, 95, 139,
+        ];
+        let secret = ed25519_dalek::SecretKey::from(sk_from_clone);
+        let xsk: ed25519_dalek::hazmat::ExpandedSecretKey = ExpandedSecretKey::from(&secret);
+        let pk_here = VerifyingKey::from(&xsk);
+        let _sig: Signature = hazmat::raw_sign::<Sha512>(&xsk, &msg, &pk_here);
+        // let xsk = ExpandedSecretKey::from(&sk_from);
+        // let sig = xsk.sign(&msg, &pk_from.0);
+        // let sig = sig.to_bytes().to_vec();
 
         {
             let fake_sig: Vec<u8> = [
@@ -365,10 +379,35 @@ mod tests {
             assert!(fake_tx.is_err());
         }
 
-        let tx = tx.sign(sig, 0).unwrap();
-        dbg!("{tx:?}");
+        let signed_tx = tx.sign(_sig.to_vec(), 0);
+        assert!(signed_tx.is_ok());
+        // let signed_tx = tx.sign_ed25519(signature.to_bytes().to_vec()).unwrap();
+        // let tx = tx.sign(sig, 0).unwrap();
+        let signed_tx = signed_tx.unwrap();
+        let expetced_tx: Vec<u8> = [
+            174, 92, 14, 181, 83, 244, 70, 38, 124, 175, 161, 223, 159, 99, 94, 139, 195, 188, 195,
+            86, 17, 239, 178, 119, 84, 6, 31, 34, 85, 238, 7, 132, 4, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1, 13, 97, 112, 116, 111, 115, 95, 97, 99, 99, 111, 117, 110, 116, 30, 98, 97, 116, 99,
+            104, 95, 116, 114, 97, 110, 115, 102, 101, 114, 95, 102, 117, 110, 103, 105, 98, 108,
+            101, 95, 97, 115, 115, 101, 116, 115, 0, 3, 32, 105, 9, 31, 186, 181, 247, 214, 53,
+            238, 122, 197, 9, 140, 240, 193, 239, 190, 49, 214, 143, 236, 15, 44, 213, 101, 232,
+            209, 104, 218, 245, 40, 50, 33, 1, 253, 52, 239, 121, 226, 76, 55, 93, 19, 93, 63, 10,
+            40, 157, 255, 227, 210, 190, 23, 117, 109, 182, 33, 240, 49, 217, 192, 225, 239, 167,
+            53, 95, 9, 1, 128, 150, 152, 0, 0, 0, 0, 0, 136, 19, 0, 0, 0, 0, 0, 0, 200, 0, 0, 0, 0,
+            0, 0, 0, 250, 142, 28, 105, 0, 0, 0, 0, 2, 0, 32, 25, 87, 201, 60, 254, 75, 77, 177,
+            156, 131, 137, 141, 80, 241, 172, 86, 115, 194, 245, 200, 117, 16, 236, 152, 139, 210,
+            235, 208, 18, 236, 109, 80, 64, 251, 211, 156, 203, 4, 19, 198, 194, 175, 155, 191, 74,
+            38, 197, 218, 115, 122, 149, 164, 239, 42, 165, 44, 154, 106, 57, 61, 18, 149, 139,
+            212, 241, 55, 53, 195, 8, 173, 71, 97, 160, 180, 148, 235, 59, 214, 204, 72, 218, 87,
+            171, 152, 199, 163, 231, 116, 251, 154, 172, 145, 72, 38, 89, 154, 8,
+        ]
+        .into();
 
-        let _tx = AptosTransaction::from_bytes(&tx).unwrap();
-        dbg!("tx: {tx:?}");
+        assert_eq!(signed_tx, expetced_tx);
+        // dbg!("{tx:?}", signed_tx.clone());
+
+        let _tx = AptosTransaction::from_bytes(&signed_tx).unwrap();
+        dbg!("tx: {tx:?}", _tx);
     }
 }
