@@ -1,7 +1,7 @@
 [package]
 name = "anychain-aptos"
 description = "A Rust library for Aptos-focused cryptocurrency wallets, enabling seamless transactions on the Aptos blockchain"
-version = "0.1.2"
+version = "0.1.3"
 keywords = ["aptos", "blockchain", "cryptocurrency", "wallet", "transactions"]
 authors = ["Shawndslee", "cregis.com"]
 edition = "2024"
