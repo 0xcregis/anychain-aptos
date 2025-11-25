@@ -10,7 +10,7 @@ use {
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AptosPublicKey(pub ed25519_dalek::PublicKey);
+pub struct AptosPublicKey(pub ed25519_dalek::VerifyingKey);
 
 pub const MAX_HEX_LEN: usize = 64;
 
@@ -23,7 +23,7 @@ impl PublicKey for AptosPublicKey {
     fn from_secret_key(secret_key: &Self::SecretKey) -> Self {
         let pk = secret_key * G;
         let pk = pk.to_bytes();
-        let pk = ed25519_dalek::PublicKey::from_bytes(&pk).unwrap();
+        let pk = ed25519_dalek::VerifyingKey::from_bytes(&pk).unwrap();
         Self(pk)
     }
 
@@ -43,7 +43,7 @@ impl FromStr for AptosPublicKey {
             return Err(PublicKeyError::InvalidByteLength(s.len()));
         }
         let bin = hex::decode(s)?;
-        let verifying_key = ed25519_dalek::PublicKey::from_bytes(bin.as_slice())
+        let verifying_key = ed25519_dalek::VerifyingKey::try_from(bin.as_slice())
             .map_err(|error| PublicKeyError::Crate("hex", format!("{error:?}")))?;
         Ok(AptosPublicKey(verifying_key))
     }
