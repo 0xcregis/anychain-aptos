@@ -1,7 +1,7 @@
 use {
     crate::{format::AptosFormat, public_key::AptosPublicKey},
     anychain_core::{Address, AddressError, PublicKey},
-    aptos_sdk::move_types::account_address::AccountAddress,
+    aptos_sdk::types::AccountAddress,
     core::{
         fmt::{Display, Formatter, Result as FmtResult},
         str::FromStr,

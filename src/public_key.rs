@@ -1,9 +1,7 @@
 use {
     crate::{address::AptosAddress, format::AptosFormat},
     anychain_core::{Address, AddressError, PublicKey, PublicKeyError, hex},
-    aptos_sdk::{
-        crypto::ed25519::Ed25519PublicKey, types::transaction::authenticator::AuthenticationKey,
-    },
+    aptos_sdk::{crypto::Ed25519PublicKey, types::AuthenticationKey},
     core::{fmt, str::FromStr},
     curve25519_dalek::{Scalar, constants::ED25519_BASEPOINT_TABLE as G},
     group::GroupEncoding,
