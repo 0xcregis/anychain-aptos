@@ -12,6 +12,7 @@ dependencies = [
  "ed25519-dalek",
  "group",
  "hex",
+ "sha3",
 ]
 
 [[package]]

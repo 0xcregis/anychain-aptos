@@ -36,6 +36,12 @@ impl FromStr for AptosAddress {
     type Err = AddressError;
 
     fn from_str(addr: &str) -> Result<Self, Self::Err> {
+        let raw = addr.strip_prefix("0x").unwrap_or(addr);
+
+        if raw.len() != 64 {
+            return Err(AddressError::InvalidCharacterLength(raw.len()));
+        }
+
         let addr = AccountAddress::from_str(addr)
             .map_err(|e| AddressError::InvalidAddress(e.to_string()))?;
         Ok(AptosAddress(addr))
@@ -117,10 +123,10 @@ mod tests {
     #[test]
     fn test_aptos_address_from_str_invalid_length_error() {
         // let err = "0x1234".parse::<AptosAddress>().unwrap_err();
-        let _err = "0x1234".parse::<AptosAddress>();
-        dbg!(_err);
-
-        // assert!(matches!(err, AddressError::InvalidCharacterLength(4)));
+        let res = "0x1234".parse::<AptosAddress>();
+        assert!(res.is_err());
+        let res = res.err().unwrap();
+        assert!(matches!(res, AddressError::InvalidCharacterLength(4)));
     }
 
     #[test]

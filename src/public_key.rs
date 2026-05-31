@@ -1,10 +1,11 @@
 use {
     crate::{address::AptosAddress, format::AptosFormat},
     anychain_core::{Address, AddressError, PublicKey, PublicKeyError, hex},
-    aptos_sdk::{crypto::Ed25519PublicKey, types::AuthenticationKey},
+    aptos_sdk::types::AccountAddress,
     core::{fmt, str::FromStr},
     curve25519_dalek::{Scalar, constants::ED25519_BASEPOINT_TABLE as G},
     group::GroupEncoding,
+    sha3::{Digest, Sha3_256},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -26,10 +27,15 @@ impl PublicKey for AptosPublicKey {
     }
 
     fn to_address(&self, _format: &Self::Format) -> Result<Self::Address, AddressError> {
-        let pk = Ed25519PublicKey::try_from(self.0.as_ref()).unwrap(); // self.0 is of type ed25519_dalek::PublicKey
-        let pk = AuthenticationKey::ed25519(&pk);
-        let address = pk.account_address();
-        Ok(AptosAddress(address))
+        let mut hasher = Sha3_256::new();
+        hasher.update(self.0.as_bytes());
+        hasher.update([0u8]); // Ed25519 single-key scheme identifier
+        let hash = hasher.finalize();
+
+        let mut addr = [0u8; 32];
+        addr.copy_from_slice(&hash);
+
+        Ok(AptosAddress(AccountAddress::new(addr)))
     }
 }
 
