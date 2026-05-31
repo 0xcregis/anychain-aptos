@@ -1,6 +1,6 @@
 use {
     crate::{address::AptosAddress, format::AptosFormat},
-    anychain_core::{Address, AddressError, PublicKey, PublicKeyError, hex},
+    anychain_core::{AddressError, PublicKey, PublicKeyError, hex},
     aptos_sdk::types::AccountAddress,
     core::{fmt, str::FromStr},
     curve25519_dalek::{Scalar, constants::ED25519_BASEPOINT_TABLE as G},
@@ -62,6 +62,7 @@ impl fmt::Display for AptosPublicKey {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anychain_core::Address;
 
     const SCALAR_BYTES_SEED_ALICE: [u8; 32] = [
         202, 240, 171, 205, 215, 167, 224, 27, 59, 98, 120, 15, 54, 14, 189, 47, 174, 26, 23, 3,
