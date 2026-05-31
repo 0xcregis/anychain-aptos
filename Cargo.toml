@@ -11,24 +11,14 @@ repository = "https://github.com/0xcregis/anychain"
 
 [dependencies]
 anychain-core = { version = "0.1.8" }
-#anychain-core = { git = "https://github.com/0xcregis/anychain", branch = "382-fix-ed25519-dalek-101-deps" }
-# branch = "devnet", rev = "f994d7ba78e5e37412ede6d36a6eabeb74c62174"
-# https://github.com/0xcregis/aptos-core/commit/f994d7ba78e5e37412ede6d36a6eabeb74c62174
 aptos-sdk = { version = "0.5.0", features = ["ed25519"] }
-# aptos-sdk = { git = "https://github.com/0xcregis/aptos-core", rev = "f994d7ba78e5e37412ede6d36a6eabeb74c62174" }
-#ed25519-dalek = { version = "1.0.1", features = ["std", "serde"] }
 ed25519-dalek = { version = "2", features = ["hazmat", "std", "serde"] }
 curve25519-dalek = { version = "4.1.3", features = ["group"] }
 group = "0.13.0"
 sha3 = "0.10"
-#tiny-bip39 = "0.8.2"
-#anyhow = "1.0"
 bcs = { package = "aptos-bcs", version = "0.1.4" }
 serde = "1.0.219"
 
 [dev-dependencies]
-#once_cell = "1.10.0"
-#url = { version = "2.4.0", features = ["serde"] }
-#tokio = { version = "1.35.1", features = ["full"] }
 sha2 = { version = "0.10.8", default-features = false }
 hex = "0.4.3"
